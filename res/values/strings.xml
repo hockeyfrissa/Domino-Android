@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello Mogul, ListDocuments!</string>
+    <string name="hello">Hello Mogul, Native Android!</string>
     <string name="app_name">Domino-Androiddemo</string>
-    <string-array name="countries_array">
-        <item>Bahrain</item>
-        <item>Bangladesh</item>
-        <item>Barbados</item>
-        <item>Belarus</item>
-        <item>Belgium</item>
-        <item>Belize</item>
-        <item>Benin</item>
-    </string-array>
+    <string name="no_data">No data loaded</string>
+    <string name="menu_newdocument">New document</string>
+    <string name="menu_deletedocument">Delete document</string>
+    <string name="menu_editdocument">Edit document</string>
+    <string name="title">Title</string>
+    <string name="body">Body</string>
+    <string name="confirm">Confirm</string>
+    <string name="editdocument">Edit document</string>
 </resources>

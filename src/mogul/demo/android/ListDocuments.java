@@ -1,81 +1,130 @@
 package mogul.demo.android;
 
+
+
 import android.app.ListActivity;
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 import android.widget.TextView;
 import android.widget.ListView;
 import android.widget.ArrayAdapter;
 
 public class ListDocuments extends ListActivity {
+    private static final int ACTIVITY_CREATE=0;
+    private static final int ACTIVITY_EDIT=1;
+
+    private static final int INSERT_ID = Menu.FIRST;
+    private static final int DELETE_ID = Menu.FIRST + 1;
+    private static final int EDIT_ID = Menu.FIRST + 2;
+
+    private NotesDbAdapter mDbHelper;
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);
+        setContentView(R.layout.document_list);
+        mDbHelper = new NotesDbAdapter(this);
+        mDbHelper.open();
+        fillData();
+        registerForContextMenu(getListView());
 
-    	 // setListAdapter(new ArrayAdapter<String>(this, R.layout.list_item, COUNTRIES));
-  
-    	//Using default Android listlayout
-    	//setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, COUNTRIES));
-    	String[] countries = getResources().getStringArray(R.array.countries_array);
-    	setListAdapter(new ArrayAdapter<String>(this, R.layout.list_item, countries));
-
-    	  ListView lv = getListView();
-    	  lv.setTextFilterEnabled(true);
-
-    	  lv.setOnItemClickListener(new OnItemClickListener() {
-    	    public void onItemClick(AdapterView<?> parent, View view,
-    	        int position, long id) {
-    	      // When clicked, show a toast with the TextView text
-    	      Toast.makeText(getApplicationContext(), ((TextView) view).getText(),
-    	          Toast.LENGTH_SHORT).show();
-    	    }
-    	  });
     }
-    static final String[] COUNTRIES = new String[] {
-        "Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra",
-        "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina",
-        "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan",
-        "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium",
-        "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia",
-        "Bosnia and Herzegovina", "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory",
-        "British Virgin Islands", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
-        "Cote d'Ivoire", "Cambodia", "Cameroon", "Canada", "Cape Verde",
-        "Cayman Islands", "Central African Republic", "Chad", "Chile", "China",
-        "Christmas Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo",
-        "Cook Islands", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
-        "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic",
-        "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea",
-        "Estonia", "Ethiopia", "Faeroe Islands", "Falkland Islands", "Fiji", "Finland",
-        "Former Yugoslav Republic of Macedonia", "France", "French Guiana", "French Polynesia",
-        "French Southern Territories", "Gabon", "Georgia", "Germany", "Ghana", "Gibraltar",
-        "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau",
-        "Guyana", "Haiti", "Heard Island and McDonald Islands", "Honduras", "Hong Kong", "Hungary",
-        "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica",
-        "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos",
-        "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
-        "Macau", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands",
-        "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia", "Moldova",
-        "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia",
-        "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand",
-        "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "North Korea", "Northern Marianas",
-        "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru",
-        "Philippines", "Pitcairn Islands", "Poland", "Portugal", "Puerto Rico", "Qatar",
-        "Reunion", "Romania", "Russia", "Rwanda", "Sqo Tome and Principe", "Saint Helena",
-        "Saint Kitts and Nevis", "Saint Lucia", "Saint Pierre and Miquelon",
-        "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Saudi Arabia", "Senegal",
-        "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands",
-        "Somalia", "South Africa", "South Georgia and the South Sandwich Islands", "South Korea",
-        "Spain", "Sri Lanka", "Sudan", "Suriname", "Svalbard and Jan Mayen", "Swaziland", "Sweden",
-        "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "The Bahamas",
-        "The Gambia", "Togo", "Tokelau", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey",
-        "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Virgin Islands", "Uganda",
-        "Ukraine", "United Arab Emirates", "United Kingdom",
-        "United States", "United States Minor Outlying Islands", "Uruguay", "Uzbekistan",
-        "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Wallis and Futuna", "Western Sahara",
-        "Yemen", "Yugoslavia", "Zambia", "Zimbabwe"
-      };
+    
+    private void fillData() {
+        Cursor notesCursor = mDbHelper.fetchAllNotes();
+        startManagingCursor(notesCursor);
+
+        // Create an array to specify the fields we want to display in the list (only TITLE)
+        String[] from = new String[]{NotesDbAdapter.KEY_TITLE};
+
+        // and an array of the fields we want to bind those fields to (in this case just text1)
+        int[] to = new int[]{R.id.text1};
+
+        // Now create a simple cursor adapter and set it to display
+        SimpleCursorAdapter notes = 
+            new SimpleCursorAdapter(this, R.layout.notes_row, notesCursor, from, to);
+        setListAdapter(notes);
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        menu.add(0, INSERT_ID, 0, R.string.menu_newdocument);
+        return true;
+       /* MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.list_menu, menu);
+        return true;*/
+    }
+
+    @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        switch(item.getItemId()) {
+            case INSERT_ID:
+                createDocument();
+                return true;
+        }
+
+        return super.onMenuItemSelected(featureId, item);
+    }
+    
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+            ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        menu.add(0, DELETE_ID, 0, R.string.menu_deletedocument);
+        menu.add(0, EDIT_ID, 0, R.string.menu_editdocument);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+    	AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+        switch(item.getItemId()) {
+            case DELETE_ID:
+                mDbHelper.deleteNote(info.id);
+                fillData();
+                return true;
+            case EDIT_ID:
+                Intent i = new Intent(this, EditDocument.class);
+                i.putExtra(NotesDbAdapter.KEY_ROWID, info.id);
+                startActivityForResult(i, ACTIVITY_EDIT);
+                return true;
+        }
+        return super.onContextItemSelected(item);
+    }
+    
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        Intent i = new Intent(this, EditDocument.class);
+        i.putExtra(NotesDbAdapter.KEY_ROWID, id);
+        startActivityForResult(i, ACTIVITY_EDIT);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        fillData();
+    }
+    
+    private void createDocument() {
+        Intent i = new Intent(this, EditDocument.class);
+        startActivityForResult(i, ACTIVITY_CREATE);
+    }
+
+    private void deleteDocument(){}
+    private void readDocument(){} //Do not use in this phase
+ 
 }
