@@ -25,7 +25,6 @@ public class ListDocuments extends ListActivity {
     private static final int ACTIVITY_CREATE=0;
     private static final int ACTIVITY_EDIT=1;
 
-    private static final int INSERT_ID = Menu.FIRST;
     private static final int DELETE_ID = Menu.FIRST + 1;
     private static final int EDIT_ID = Menu.FIRST + 2;
 
@@ -57,12 +56,18 @@ public class ListDocuments extends ListActivity {
         SimpleCursorAdapter notes = 
             new SimpleCursorAdapter(this, R.layout.notes_row, notesCursor, from, to);
         setListAdapter(notes);
+        
+       // registerForContextMenu(notes);
     }
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-        menu.add(0, INSERT_ID, 0, R.string.menu_newdocument);
+       // super.onCreateOptionsMenu(menu);
+        //menu.add(0, INSERT_ID, 0, R.string.menu_newdocument);
+        //return true;
+        
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_options, menu);
         return true;
        /* MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.list_menu, menu);
@@ -72,7 +77,7 @@ public class ListDocuments extends ListActivity {
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         switch(item.getItemId()) {
-            case INSERT_ID:
+            case R.id.menu_newdoc:
                 createDocument();
                 return true;
         }
@@ -84,8 +89,11 @@ public class ListDocuments extends ListActivity {
     public void onCreateContextMenu(ContextMenu menu, View v,
             ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
+        CharSequence title = ((TextView) info.targetView.findViewById(R.id.text1)).getText();
+        menu.setHeaderTitle(title);
         menu.add(0, DELETE_ID, 0, R.string.menu_deletedocument);
-        menu.add(0, EDIT_ID, 0, R.string.menu_editdocument);
+        menu.add(0, EDIT_ID, 0, R.string.menu_editdocument); 
     }
 
     @Override
